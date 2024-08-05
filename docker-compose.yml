@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      args:
+        user: laraveluser
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfilephp
+    container_name: laravel_app
+    volumes:
+      - ./www:/var/www/html
+      - ./php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf
+    networks:
+      - app-network
+
+  web:
+    image: nginx:alpine
+    container_name: nginx_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./www:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  db:
+    image: mysql:5.7
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: laravel_db
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+    ports:
+      - "3306:3306"    
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge
